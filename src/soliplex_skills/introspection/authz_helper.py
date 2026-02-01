@@ -1,4 +1,4 @@
-"""Helper to create RoomAuthorization without Soliplex changes.
+"""Helper to create AuthorizationPolicy without Soliplex changes.
 
 This module provides a way to get auth-filtered room access from within
 a tool context, without requiring changes to Soliplex's AgentDependencies.
@@ -7,12 +7,12 @@ Usage:
     from soliplex_skills.introspection.authz_helper import get_room_authz
 
     async def my_tool(ctx: RunContext[AgentDependencies]):
-        async with get_room_authz(ctx.deps.the_installation) as room_authz:
-            # room_authz may be None if soliplex.authz is not available
-            if room_authz is not None:
+        async with get_room_authz(ctx.deps.the_installation) as authz_policy:
+            # authz_policy may be None if soliplex.authz is not available
+            if authz_policy is not None:
                 rooms = await installation.get_room_configs(
                     user=ctx.deps.user,
-                    the_room_authz=room_authz,
+                    the_authz_policy=authz_policy,
                 )
 """
 
@@ -30,26 +30,26 @@ if TYPE_CHECKING:
 async def get_room_authz(
     installation: Any,
 ) -> AsyncGenerator[Any, None]:
-    """Create a RoomAuthorization instance from the installation.
+    """Create an AuthorizationPolicy instance from the installation.
 
     This is a workaround for the fact that AgentDependencies doesn't
-    include the_room_authz. We create our own session and authz instance.
+    include the_authz_policy. We create our own session and authz instance.
 
     Args:
         installation: The Soliplex Installation instance
 
     Yields:
-        RoomAuthorization instance, or None if not available
+        AuthorizationPolicy instance, or None if not available
 
     Example:
         async with get_room_authz(ctx.deps.the_installation) as authz:
             if authz:
                 rooms = await installation.get_room_configs(
-                    user=user, the_room_authz=authz
+                    user=user, the_authz_policy=authz
                 )
     """
     try:
-        from soliplex.authz.schema import RoomAuthorization
+        from soliplex.authz.schema import AuthorizationPolicy
         from sqlalchemy.ext.asyncio import AsyncSession
         from sqlalchemy.ext.asyncio import create_async_engine
     except ImportError:
@@ -59,9 +59,9 @@ async def get_room_authz(
 
     # Get the database URI from installation
     try:
-        dburi = installation.room_authz_dburi_async
+        dburi = installation.authorization_dburi_async
     except AttributeError:
-        # Installation doesn't have room_authz_dburi_async
+        # Installation doesn't have authorization_dburi_async
         yield None
         return
 
@@ -73,7 +73,7 @@ async def get_room_authz(
     engine = create_async_engine(dburi)
     try:
         async with AsyncSession(engine) as session:
-            room_authz = RoomAuthorization(session)
-            yield room_authz
+            authz_policy = AuthorizationPolicy(session)
+            yield authz_policy
     finally:
         await engine.dispose()

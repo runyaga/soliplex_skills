@@ -1,0 +1,18 @@
+id: gpt-20b
+name: GPT-OSS 20B
+description: Blank room with gpt-oss:20b model
+
+suggestions:
+  - "Hello"
+  - "What can you help me with?"
+
+agent:
+  template_id: default_chat
+  model_name: "gpt-oss:20b"
+  system_prompt: |
+    You are a helpful AI assistant.
+
+tools: []
+
+welcome_message: |
+  Blank room running gpt-oss:20b.
