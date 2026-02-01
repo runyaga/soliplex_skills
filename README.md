@@ -26,31 +26,29 @@ Skills are **domain-specific capability bundles** that agents discover and load 
 
 ## Installation
 
-### From Source (Recommended)
+> **Note**: Neither soliplex nor soliplex-skills are published to PyPI yet. Install from GitHub source.
+
+### 1. Install Soliplex (Required Dependency)
 
 ```bash
-git clone https://github.com/soliplex/soliplex_skills.git
+git clone https://github.com/soliplex/soliplex.git
+cd soliplex
+uv sync
+```
+
+### 2. Install soliplex-skills
+
+```bash
+git clone https://github.com/runyaga/soliplex_skills.git
 cd soliplex_skills
 uv sync
 ```
 
-### From PyPI (when published)
+Or add as a dependency in your project:
 
 ```bash
-# Using uv
-uv add soliplex-skills
-
-# Using pip
-pip install soliplex-skills
-```
-
-### With Soliplex Integration
-
-For full Soliplex integration, install Soliplex first:
-
-```bash
-git clone https://github.com/soliplex/soliplex.git ../soliplex
-uv pip install -e ../soliplex
+uv add "soliplex-skills @ git+https://github.com/runyaga/soliplex_skills.git"
+uv add "soliplex @ git+https://github.com/soliplex/soliplex.git"
 ```
 
 ## Quick Start
