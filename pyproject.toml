@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "soliplex-skills"
-version = "0.2.0dev1"
+version = "0.3.0"
 description = "Soliplex adapter for pydantic-ai-skills"
 authors = [{ name = "runyaga", email = "runyaga@gmail.com" }]
 readme = "README.md"
