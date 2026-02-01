@@ -13,7 +13,6 @@ import json
 import math
 import os
 import subprocess
-import time
 from pathlib import Path
 
 import httpx
@@ -46,12 +45,15 @@ def soliplex_available():
     """Check if Soliplex server is running."""
     try:
         response = httpx.get(f"{SOLIPLEX_URL}/api/ok", timeout=5)
-        return response.status_code == 200
     except httpx.RequestError:
         return False
+    else:
+        return response.status_code == 200
 
 
-def send_message_and_wait(room_id: str, message: str, timeout: int = TIMEOUT) -> str | None:
+def send_message_and_wait(
+    room_id: str, message: str, timeout: int = TIMEOUT
+) -> str | None:
     """Send message to room and wait for complete response.
 
     Uses AG-UI protocol two-step flow:
@@ -62,8 +64,9 @@ def send_message_and_wait(room_id: str, message: str, timeout: int = TIMEOUT) ->
     """
     try:
         # Step 1: Create thread and run
+        msg_hash = hashlib.md5(message.encode()).hexdigest()[:8]
         create_payload = {
-            "thread_id": f"test-{hashlib.md5(message.encode()).hexdigest()[:8]}",
+            "thread_id": f"test-{msg_hash}",
             "messages": [{"id": "msg-1", "role": "user", "content": message}],
         }
         create_response = httpx.post(
@@ -75,7 +78,7 @@ def send_message_and_wait(room_id: str, message: str, timeout: int = TIMEOUT) ->
         create_data = create_response.json()
 
         thread_id = create_data["thread_id"]
-        run_id = list(create_data["runs"].keys())[0]
+        run_id = next(iter(create_data["runs"].keys()))
 
         # Step 2: Execute run with AG-UI RunAgentInput
         exec_payload = {
@@ -125,7 +128,8 @@ class TestMathSkillScript:
     @pytest.fixture
     def script_path(self):
         """Path to the calculate.py script."""
-        return Path(__file__).parent.parent / "example/skills/math-solver/scripts/calculate.py"
+        base = Path(__file__).parent.parent
+        return base / "example/skills/math-solver/scripts/calculate.py"
 
     def run_script(self, script_path: Path, *args: str) -> str:
         """Run the script and return output."""
@@ -173,7 +177,9 @@ class TestMathSkillIntegration:
         pytest -m integration
     """
 
-    def test_factorial_not_hallucinated(self, soliplex_available, expected_answers):
+    def test_factorial_not_hallucinated(
+        self, soliplex_available, expected_answers
+    ):
         """Verify 23! is computed by script, not hallucinated.
 
         LLMs almost never get 23! correct. If the exact answer appears,
@@ -183,7 +189,7 @@ class TestMathSkillIntegration:
             pytest.skip("Soliplex server not available")
 
         prompt = """You have the math-solver skill available.
-Use the run_skill_script tool to execute calculate.py with operation 'factorial' and argument '23'.
+Use run_skill_script with operation 'factorial' and argument '23'.
 Return ONLY the exact numerical result."""
 
         response = send_message_and_wait(ROOM_ID, prompt)
@@ -197,13 +203,15 @@ Return ONLY the exact numerical result."""
             f"LLM may have hallucinated. Response: {response[:500]}"
         )
 
-    def test_fibonacci_not_hallucinated(self, soliplex_available, expected_answers):
+    def test_fibonacci_not_hallucinated(
+        self, soliplex_available, expected_answers
+    ):
         """Verify fib(47) is computed by script, not hallucinated."""
         if not soliplex_available:
             pytest.skip("Soliplex server not available")
 
         prompt = """You have the math-solver skill available.
-Use the run_skill_script tool to execute calculate.py with operation 'fibonacci' and argument '47'.
+Use run_skill_script with operation 'fibonacci' and argument '47'.
 Return ONLY the exact numerical result."""
 
         response = send_message_and_wait(ROOM_ID, prompt)
@@ -226,7 +234,8 @@ class TestSkillDiscovery:
         skill_dir = Path(__file__).parent.parent / "example/skills/math-solver"
         assert skill_dir.exists(), "math-solver skill directory not found"
         assert (skill_dir / "SKILL.md").exists(), "SKILL.md not found"
-        assert (skill_dir / "scripts/calculate.py").exists(), "calculate.py not found"
+        script = skill_dir / "scripts/calculate.py"
+        assert script.exists(), "calculate.py not found"
 
     def test_skill_discovered(self):
         """Verify math-solver is discovered by pydantic-ai-skills."""
