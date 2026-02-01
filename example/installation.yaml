@@ -33,7 +33,7 @@ thread_persistence_dburi:
   sync: "sqlite://"
   async: "sqlite+aiosqlite://"
 
-authorization_dburi:
+room_authz_dburi:
   sync: "sqlite://"
   async: "sqlite+aiosqlite://"
 
