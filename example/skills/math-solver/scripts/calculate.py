@@ -32,9 +32,29 @@ def fibonacci(n: int) -> int:
     return b
 
 
+def add(a: int, b: int) -> int:
+    """Addition."""
+    return a + b
+
+
+def subtract(a: int, b: int) -> int:
+    """Subtraction."""
+    return a - b
+
+
 def multiply(a: int, b: int) -> int:
     """Precise multiplication."""
     return a * b
+
+
+def divide(a: int, b: int) -> float:
+    """Division."""
+    return a / b
+
+
+def power(a: int, b: int) -> int:
+    """Exponentiation."""
+    return a ** b
 
 
 def modexp(base: int, exp: int, mod: int) -> int:
@@ -110,11 +130,43 @@ def main():
     else:
         print("Usage: calculate.py --operation <op> [--n N] [--a A] [--b B]")
         print("   or: calculate.py <operation> <args...>")
-        print("Operations: factorial, fibonacci, multiply, modexp, gcd, lcm, prime_factors, is_prime")
+        print("Operations: add, subtract, multiply, divide, power, factorial, fibonacci, modexp, gcd, lcm, prime_factors, is_prime")
         sys.exit(1)
 
     try:
-        if op == "factorial":
+        if op == "add":
+            if args.a is not None and args.b is not None:
+                a, b = args.a, args.b
+            else:
+                a, b = int(args.positional[1]), int(args.positional[2])
+            result = add(a, b)
+            print(f"{a} + {b} = {result}")
+
+        elif op == "subtract":
+            if args.a is not None and args.b is not None:
+                a, b = args.a, args.b
+            else:
+                a, b = int(args.positional[1]), int(args.positional[2])
+            result = subtract(a, b)
+            print(f"{a} - {b} = {result}")
+
+        elif op == "divide":
+            if args.a is not None and args.b is not None:
+                a, b = args.a, args.b
+            else:
+                a, b = int(args.positional[1]), int(args.positional[2])
+            result = divide(a, b)
+            print(f"{a} / {b} = {result}")
+
+        elif op == "power":
+            if args.a is not None and args.b is not None:
+                a, b = args.a, args.b
+            else:
+                a, b = int(args.positional[1]), int(args.positional[2])
+            result = power(a, b)
+            print(f"{a}^{b} = {result}")
+
+        elif op == "factorial":
             n = args.n if args.n is not None else int(args.positional[1])
             result = factorial(n)
             print(f"{n}! = {result}")

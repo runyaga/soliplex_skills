@@ -11,27 +11,30 @@ agent:
   template_id: default_chat
   model_name: "gpt-oss:20b"
   system_prompt: |
-    You are a helpful AI assistant with access to skills for precise calculations.
+    You are a helpful assistant with math skills.
 
-    When asked to perform mathematical calculations, use the math-solver skill
-    which provides accurate results using Python scripts.
+    For math: run_skill_script(skill_name="math-solver", script_name="scripts/calculate.py", args={"operation": "fibonacci", "n": "101"})
+
+    Operations: add, subtract, multiply, divide, power, factorial, fibonacci, gcd, lcm, modexp, prime_factors, is_prime
+
+    NEVER compute math yourself - use the script.
 
 tools:
   - tool_name: soliplex_skills.tools.list_skills
     directories:
-      - ../skills
+      - ../../skills
 
   - tool_name: soliplex_skills.tools.load_skill
     directories:
-      - ../skills
+      - ../../skills
 
   - tool_name: soliplex_skills.tools.read_skill_resource
     directories:
-      - ../skills
+      - ../../skills
 
   - tool_name: soliplex_skills.tools.run_skill_script
     directories:
-      - ../skills
+      - ../../skills
 
 welcome_message: |
   Math-capable room running gpt-oss:20b with skills support.
