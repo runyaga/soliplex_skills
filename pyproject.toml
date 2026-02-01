@@ -54,6 +54,7 @@ markers = [
 
 [tool.coverage.run]
 source = ["src/soliplex_skills"]
+omit = ["src/soliplex_skills/introspection/*"]
 
 [tool.coverage.report]
 show_missing = true
