@@ -12,8 +12,6 @@ meta:
     - soliplex_skills.config.LoadSkillConfig
     - soliplex_skills.config.ReadSkillResourceConfig
     - soliplex_skills.config.RunSkillScriptConfig
-    - soliplex_skills.introspection.config.DiscoverRoomsConfig
-    - soliplex_skills.introspection.config.DelegateToRoomConfig
 
 secrets:
   - secret_name: "URL_SAFE_TOKEN_SECRET"
