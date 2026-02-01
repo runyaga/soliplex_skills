@@ -1,38 +1,35 @@
-# Soliplex Installation Configuration for soliplex_skills
+# Soliplex Installation for soliplex_skills demo
 #
-# This file registers the Skills tool configs with Soliplex.
-# Include this in your installation's meta.tool_configs list.
-#
-# Usage:
-#   1. Copy this file to your Soliplex installation directory
-#   2. Reference the tool configs in your installation.yaml:
-#
-#      meta:
-#        tool_configs:
-#          - soliplex_skills.config.ListSkillsConfig
-#          - soliplex_skills.config.LoadSkillConfig
-#          - soliplex_skills.config.ReadSkillResourceConfig
-#          - soliplex_skills.config.RunSkillScriptConfig
+# Run with:
+#   cd soliplex_skills
+#   soliplex serve example/installation.yaml --no-auth-mode --port 8002
+
+id: soliplex-skills-demo
 
 meta:
-  # Tool configuration classes for Skills integration
   tool_configs:
     - soliplex_skills.config.ListSkillsConfig
     - soliplex_skills.config.LoadSkillConfig
     - soliplex_skills.config.ReadSkillResourceConfig
     - soliplex_skills.config.RunSkillScriptConfig
+    - soliplex_skills.introspection.config.DiscoverRoomsConfig
+    - soliplex_skills.introspection.config.DelegateToRoomConfig
 
-# Default skills configuration reference (illustrative only).
-# NOTE: Soliplex does not auto-merge this section into room configs.
-# Copy these values to each room_config.yaml tool entry as needed.
-defaults:
-  skills:
-    # Default skills directory relative to installation root
-    directories:
-      - ./skills
-    # Validate skill structure on load
-    validate: true
-    # Maximum depth for skill discovery
-    max_depth: 3
-    # Tools to exclude (e.g., disable script execution)
-    exclude_tools: []
+environment:
+  - "OLLAMA_BASE_URL"
+
+# Thread persistence (required)
+thread_persistence_dburi:
+  sync: "sqlite:///./threads.db"
+  async: "sqlite+aiosqlite:///./threads.db"
+
+# Agent templates
+agent_config_templates:
+  - id: "default_chat"
+    model_name: "gpt-oss:latest"
+    system_prompt: |
+      You are a helpful AI assistant.
+
+# Room paths
+room_paths:
+  - "./rooms"

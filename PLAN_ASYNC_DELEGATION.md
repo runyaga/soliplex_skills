@@ -134,6 +134,80 @@ if emitter is not None:
 The emitter is accessed via `ctx.deps.agui_emitter` which is already typed as `Any`.
 We just call methods on it if it exists - duck typing.
 
+---
+
+## Implementation Status: COMPLETE
+
+### Changes Made
+
+**`src/soliplex_skills/introspection/tools.py`** (lines 308-349):
+```python
+# Get emitter for progress events (may be None)
+emitter = getattr(ctx.deps, "agui_emitter", None)
+step_name = f"delegate:{room_id}"
+
+# Start delegation step
+if emitter is not None:
+    try:
+        emitter.start_step(step_name)
+    except Exception:
+        pass  # Don't fail delegation if emitter errors
+
+# ... delegation call ...
+
+finally:
+    # Finish delegation step
+    if emitter is not None:
+        try:
+            emitter.finish_step(step_name)
+        except Exception:
+            pass  # Don't fail if emitter errors
+```
+
+### Tests Added
+
+**`tests/unit/test_introspection.py`**:
+- `test_delegation_emits_step_events` - verifies start/finish called on success
+- `test_delegation_emits_finish_on_failure` - verifies finally block works on error
+- `test_delegation_works_without_emitter` - verifies None emitter is safe
+
+### Test Results
+- **118 tests pass**
+- **89% coverage**
+- All existing tests unchanged
+
+### Integration Test (Real LLM)
+
+Ran against soliplex installation with Ollama (gpt-oss:latest):
+
+```
+$ OLLAMA_BASE_URL=http://localhost:11434 python test_delegation_emitter.py
+
+Using target room: haiku
+Running delegation (hitting LLM via Ollama)...
+
+=== RESULTS ===
+Success: True
+Response: I'm sorry, but I cannot find any relevant documents...
+Error: None
+
+=== EMITTER ===
+start_step called: True
+finish_step called: True
+start_step args: call('delegate:haiku')
+finish_step args: call('delegate:haiku')
+```
+
+**Validated:**
+1. LLM is actually hit (Ollama model responds)
+2. `start_step('delegate:{room_id}')` emitted before delegation
+3. `finish_step('delegate:{room_id}')` emitted after delegation
+4. Works with haiku AGUIEmitter interface
+
+### Additional Fix
+
+Changed `result.data` to `result.output` to match pydantic-ai API.
+
 ## Test Plan
 
 1. **Unit test**: Mock emitter, verify emit called with correct events

@@ -15,7 +15,7 @@ name: Room Coordinator
 description: Discovers and delegates to other rooms
 
 agent:
-  model_name: gpt-4
+  template_id: "default_chat"
   system_prompt: |
     You are a room coordinator assistant. Your role is to help users
     discover what rooms are available and delegate tasks to the right room.

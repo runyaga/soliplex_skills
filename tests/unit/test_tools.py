@@ -94,6 +94,36 @@ class TestLoadSkill:
         assert "Error" in result
         assert "IO Error" in result
 
+    async def test_not_found_error_with_adapter_failure(self, mock_config):
+        """Test load_skill handles failure getting available skills list."""
+        from pydantic_ai_skills import SkillNotFoundError
+
+        # First call succeeds (for load_skill), returns SkillNotFoundError
+        # Second call (to get available skills) fails
+        call_count = 0
+
+        async def failing_get_adapter(config):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                mock = MagicMock()
+                mock.load_skill = AsyncMock(
+                    side_effect=SkillNotFoundError("test")
+                )
+                return mock
+            else:
+                msg = "Adapter unavailable"
+                raise RuntimeError(msg)
+
+        with patch.object(
+            tools, "_get_adapter", side_effect=failing_get_adapter
+        ):
+            result = await tools.load_skill(mock_config, "missing-skill")
+
+        assert "Error:" in result
+        assert "missing-skill" in result
+        assert "unavailable" in result
+
 
 class TestReadSkillResource:
     """Test read_skill_resource tool function."""
@@ -151,6 +181,23 @@ class TestReadSkillResource:
             )
 
         assert "Error:" in result
+
+    async def test_returns_error_on_general_exception(self, mock_config):
+        """Test returns error on general exception during resource read."""
+        mock_adapter = MagicMock()
+        mock_adapter.read_skill_resource = AsyncMock(
+            side_effect=RuntimeError("IO Error")
+        )
+
+        with patch.object(tools, "_get_adapter", return_value=mock_adapter):
+            result = await tools.read_skill_resource(
+                mock_config, "test-skill", "my-resource"
+            )
+
+        assert "Error" in result
+        assert "my-resource" in result
+        assert "test-skill" in result
+        assert "IO Error" in result
 
 
 class TestRunSkillScript:

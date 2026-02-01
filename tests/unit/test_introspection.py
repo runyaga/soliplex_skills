@@ -43,9 +43,12 @@ class MockRoomConfig:
 # Mock Agent result
 @dataclasses.dataclass
 class MockAgentResult:
-    """Mock result from agent.run()."""
+    """Mock result from agent.run().
 
-    data: str
+    Note: pydantic-ai uses .output not .data for the result.
+    """
+
+    output: str
 
 
 # Mock Agent
@@ -67,7 +70,7 @@ class MockAgent:
     async def run(self, query: str, deps: Any = None) -> MockAgentResult:
         if self._should_fail:
             raise self._fail_error
-        return MockAgentResult(data=self._response)
+        return MockAgentResult(output=self._response)
 
 
 # Mock Installation class

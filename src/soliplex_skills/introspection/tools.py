@@ -25,6 +25,7 @@ Note on Delegation:
 
 from __future__ import annotations
 
+import contextlib
 import dataclasses
 from typing import TYPE_CHECKING
 from typing import Any
@@ -312,15 +313,14 @@ async def delegate_to_room(
 
     # Start delegation step
     if emitter is not None:
-        try:
+        with contextlib.suppress(Exception):
             emitter.start_step(step_name)
-        except Exception:
-            pass  # Don't fail delegation if emitter errors
 
     # Run the query through the target agent
     try:
         result = await target_agent.run(query, deps=target_deps)
-        response_text = str(result.data) if result.data else ""
+        # pydantic-ai uses .output not .data
+        response_text = str(result.output) if result.output else ""
 
         return DelegationResult(
             room_id=room_id,
@@ -343,7 +343,5 @@ async def delegate_to_room(
     finally:
         # Finish delegation step
         if emitter is not None:
-            try:
+            with contextlib.suppress(Exception):
                 emitter.finish_step(step_name)
-            except Exception:
-                pass  # Don't fail if emitter errors
