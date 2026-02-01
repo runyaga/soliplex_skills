@@ -21,36 +21,33 @@ Skills are **domain-specific capability bundles** that agents discover and load 
 - **Pydantic-First Config**: Native types, no string parsing
 - **Multi-Directory Support**: Load skills from multiple sources
 - **Per-Room Configuration**: Different rooms can have different skill sets
-- **Introspection Tools**: `discover_rooms`, `delegate_to_room` for cross-room coordination
 - **Soliplex Integration**: Full compatibility with Soliplex's config system
 
 ## Installation
 
-### From Source (Recommended)
+> **Note**: Neither soliplex nor soliplex-skills are published to PyPI yet. Install from GitHub source.
+
+### 1. Install Soliplex (Required Dependency)
 
 ```bash
-git clone https://github.com/soliplex/soliplex_skills.git
+git clone https://github.com/soliplex/soliplex.git
+cd soliplex
+uv sync
+```
+
+### 2. Install soliplex-skills
+
+```bash
+git clone https://github.com/runyaga/soliplex_skills.git
 cd soliplex_skills
 uv sync
 ```
 
-### From PyPI (when published)
+Or add as a dependency in your project:
 
 ```bash
-# Using uv
-uv add soliplex-skills
-
-# Using pip
-pip install soliplex-skills
-```
-
-### With Soliplex Integration
-
-For full Soliplex integration, install Soliplex first:
-
-```bash
-git clone https://github.com/soliplex/soliplex.git ../soliplex
-uv pip install -e ../soliplex
+uv add "soliplex-skills @ git+https://github.com/runyaga/soliplex_skills.git"
+uv add "soliplex @ git+https://github.com/soliplex/soliplex.git"
 ```
 
 ## Quick Start
@@ -214,39 +211,12 @@ directories:
 directories: ./skills,../shared_skills
 ```
 
-## Introspection Tools
-
-For cross-room coordination:
-
-### discover_rooms
-
-```python
-from soliplex_skills import discover_rooms
-
-result = await discover_rooms(ctx, tool_config=config)
-# Returns: DiscoveryResult with room info, tools, models
-```
-
-### delegate_to_room
-
-```python
-from soliplex_skills import delegate_to_room
-
-result = await delegate_to_room(
-    ctx,
-    room_id="research",
-    query="Find papers on transformers"
-)
-# Returns: DelegationResult with response from delegated room
-```
-
 ## Examples
 
 See the `example/` directory for complete working examples:
 
 - `example/rooms/research-assistant/` - RAG-powered research room
 - `example/rooms/code-reviewer/` - Code review with style guides
-- `example/rooms/coordinator/` - Cross-room delegation demo
 - `example/skills/` - Sample skills
 
 ## Development

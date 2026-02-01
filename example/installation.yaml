@@ -1,10 +1,10 @@
 # Soliplex Installation for soliplex_skills demo
 #
 # Run with:
-#   cd soliplex_skills
-#   soliplex serve example/installation.yaml --no-auth-mode --port 8002
+#   cd soliplex_skills/example
+#   OLLAMA_BASE_URL=http://localhost:11434 soliplex serve installation.yaml --no-auth-mode --port 8002
 
-id: soliplex-skills-demo
+id: "soliplex-skills-demo"
 
 meta:
   tool_configs:
@@ -12,24 +12,30 @@ meta:
     - soliplex_skills.config.LoadSkillConfig
     - soliplex_skills.config.ReadSkillResourceConfig
     - soliplex_skills.config.RunSkillScriptConfig
-    - soliplex_skills.introspection.config.DiscoverRoomsConfig
-    - soliplex_skills.introspection.config.DelegateToRoomConfig
+
+secrets:
+  - secret_name: "URL_SAFE_TOKEN_SECRET"
+    sources:
+      - kind: "random_chars"
 
 environment:
   - "OLLAMA_BASE_URL"
+  - name: "INSTALLATION_PATH"
+    value: "file:."
 
-# Thread persistence (required)
-thread_persistence_dburi:
-  sync: "sqlite:///./threads.db"
-  async: "sqlite+aiosqlite:///./threads.db"
-
-# Agent templates
-agent_config_templates:
+agent_configs:
   - id: "default_chat"
-    model_name: "gpt-oss:latest"
+    model_name: "gpt-oss:120b"
     system_prompt: |
       You are a helpful AI assistant.
 
-# Room paths
+thread_persistence_dburi:
+  sync: "sqlite://"
+  async: "sqlite+aiosqlite://"
+
+room_authz_dburi:
+  sync: "sqlite://"
+  async: "sqlite+aiosqlite://"
+
 room_paths:
   - "./rooms"

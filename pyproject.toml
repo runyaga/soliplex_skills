@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "soliplex-skills"
-version = "0.1.0dev0"
+version = "0.3.0"
 description = "Soliplex adapter for pydantic-ai-skills"
 authors = [{ name = "runyaga", email = "runyaga@gmail.com" }]
 readme = "README.md"
@@ -25,7 +25,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# soliplex not on PyPI - install from local: uv pip install -e /path/to/soliplex
+soliplex = ["soliplex @ git+https://github.com/soliplex/soliplex.git@main"]
 
 [dependency-groups]
 dev = [
@@ -34,7 +34,7 @@ dev = [
     "pytest-asyncio >= 0.23.0",
     "coverage >= 7.0.0",
     "ruff >= 0.4.0",
-    # soliplex: install manually with uv pip install -e ~/dev/soliplex
+    "soliplex @ git+https://github.com/soliplex/soliplex.git@main",
 ]
 
 [tool.setuptools.packages.find]
@@ -43,13 +43,18 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = "src"
 python_files = "test_*.py"
-testpaths = ["tests/unit", "tests/functional"]
+testpaths = ["tests/unit", "tests/functional", "tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 addopts = "--cov=soliplex_skills --cov-branch --cov-fail-under=90"
+markers = [
+    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
 
 [tool.coverage.run]
 source = ["src/soliplex_skills"]
+omit = ["src/soliplex_skills/introspection/*"]
 
 [tool.coverage.report]
 show_missing = true

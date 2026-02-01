@@ -71,9 +71,7 @@ class TestLoadSkillFunctional:
 
     async def test_load_nonexistent_skill_error(self, single_dir_config):
         """Test loading non-existent skill returns error message."""
-        result = await tools.load_skill(
-            single_dir_config, "nonexistent-skill"
-        )
+        result = await tools.load_skill(single_dir_config, "nonexistent-skill")
 
         assert "Error:" in result
         assert "not found" in result.lower()

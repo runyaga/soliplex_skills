@@ -8,7 +8,7 @@ Note on Authorization:
     request context, not in tool context.
 
     For production use, consider:
-    1. Adding `the_room_authz` to AgentDependencies (Soliplex change)
+    1. Adding `the_authz_policy` to AgentDependencies (Soliplex change)
     2. Using these tools only in trusted environments
     3. Configuring `exclude_rooms` to hide sensitive rooms
 
@@ -27,15 +27,10 @@ from __future__ import annotations
 
 import contextlib
 import dataclasses
-from typing import TYPE_CHECKING
 from typing import Any
 
 import pydantic
-
-if TYPE_CHECKING:
-    import pydantic_ai
-
-    from soliplex_skills.introspection.config import IntrospectionToolConfig
+import pydantic_ai
 
 
 class RoomInfo(pydantic.BaseModel):
@@ -61,7 +56,6 @@ class DiscoveryResult(pydantic.BaseModel):
 
 async def discover_rooms(
     ctx: pydantic_ai.RunContext[Any],
-    tool_config: IntrospectionToolConfig | None = None,
 ) -> DiscoveryResult:
     """Discover available rooms and their capabilities.
 
@@ -74,7 +68,6 @@ async def discover_rooms(
 
     Args:
         ctx: The run context containing agent dependencies
-        tool_config: Configuration for discovery behavior
 
     Returns:
         DiscoveryResult with room information
@@ -84,6 +77,15 @@ async def discover_rooms(
     # Get installation from context
     installation = ctx.deps.the_installation
     user = getattr(ctx.deps, "user", None)
+
+    # Get tool config from context deps
+    tool_configs = ctx.deps.tool_configs
+    try:
+        tool_config = tool_configs[
+            "soliplex_skills.introspection.tools.discover_rooms"
+        ]
+    except (KeyError, TypeError):
+        tool_config = None
 
     # Determine if we should use auth filtering
     use_auth = False
@@ -102,12 +104,12 @@ async def discover_rooms(
         async with get_room_authz(installation) as room_authz:
             room_configs = await installation.get_room_configs(
                 user=user,
-                the_room_authz=room_authz,  # May be None if unavailable
+                the_authz_policy=room_authz,  # May be None if unavailable
             )
     else:
         room_configs = await installation.get_room_configs(
             user=user,
-            the_room_authz=None,
+            the_authz_policy=None,
         )
 
     total_count = len(room_configs)
@@ -178,7 +180,6 @@ async def delegate_to_room(
     ctx: pydantic_ai.RunContext[Any],
     room_id: str,
     query: str,
-    tool_config: IntrospectionToolConfig | None = None,
 ) -> DelegationResult:
     """Delegate a query to another room's agent.
 
@@ -193,7 +194,6 @@ async def delegate_to_room(
         ctx: The run context containing agent dependencies
         room_id: The ID of the room to delegate to
         query: The query/prompt to send to the target room's agent
-        tool_config: Configuration for delegation behavior
 
     Returns:
         DelegationResult with the response from the target room
@@ -201,6 +201,15 @@ async def delegate_to_room(
     Raises:
         DelegationError: If the room is not found or delegation fails
     """
+    # Get tool config from context deps
+    tool_configs = ctx.deps.tool_configs
+    try:
+        tool_config = tool_configs[
+            "soliplex_skills.introspection.tools.delegate_to_room"
+        ]
+    except (KeyError, TypeError):
+        tool_config = None
+
     # Get current delegation depth from state
     current_depth = ctx.deps.state.get("_delegation_depth", 0)
 
@@ -247,13 +256,13 @@ async def delegate_to_room(
                 target_room = await installation.get_room_config(
                     room_id=room_id,
                     user=user,
-                    the_room_authz=room_authz,
+                    the_authz_policy=room_authz,
                 )
         else:
             target_room = await installation.get_room_config(
                 room_id=room_id,
                 user=user,
-                the_room_authz=None,
+                the_authz_policy=None,
             )
     except KeyError:
         return DelegationResult(
@@ -271,7 +280,7 @@ async def delegate_to_room(
         target_agent = await installation.get_agent_for_room(
             room_id=room_id,
             user=user,
-            the_room_authz=None,
+            the_authz_policy=None,
         )
     except KeyError:
         return DelegationResult(
@@ -296,14 +305,12 @@ async def delegate_to_room(
             the_installation: Any
             user: Any = None
             tool_configs: Any = None
-            agui_emitter: Any = None
             state: dict = dataclasses.field(default_factory=dict)
 
     target_deps = AgentDependencies(
         the_installation=installation,
         user=user,
         tool_configs=target_room.tool_configs,
-        agui_emitter=None,  # No streaming to client
         state={"_delegation_depth": current_depth + 1},
     )
 

@@ -18,9 +18,9 @@ if TYPE_CHECKING:
 # Type alias for cache key (all hashable types from SkillsToolConfig)
 CacheKey = tuple[
     tuple[pathlib.Path, ...],  # directories
-    bool,                       # validate_skills
-    int,                        # max_depth
-    frozenset[str],             # exclude_tools
+    bool,  # validate_skills
+    int,  # max_depth
+    frozenset[str],  # exclude_tools
 ]
 
 # Module-level cache: config key -> toolset (supports concurrent rooms)
@@ -42,10 +42,10 @@ async def _get_toolset(config: SkillsToolConfig) -> SkillsToolset:
     """
     # Cache key uses hashable types from config (tuple, frozenset)
     key: CacheKey = (
-        config.directories,      # tuple[pathlib.Path, ...]
+        config.directories,  # tuple[pathlib.Path, ...]
         config.validate_skills,  # bool
-        config.max_depth,        # int
-        config.exclude_tools,    # frozenset[str]
+        config.max_depth,  # int
+        config.exclude_tools,  # frozenset[str]
     )
 
     if key in _toolset_cache:
@@ -132,14 +132,14 @@ class SoliplexSkillsAdapter:
         return f"""<skill>
 <name>{skill.name}</name>
 <description>{skill.description}</description>
-<uri>{skill.uri or 'N/A'}</uri>
+<uri>{skill.uri or "N/A"}</uri>
 
 <resources>
-{chr(10).join(resources_list) if resources_list else '<!-- No resources -->'}
+{chr(10).join(resources_list) if resources_list else "<!-- No resources -->"}
 </resources>
 
 <scripts>
-{chr(10).join(scripts_list) if scripts_list else '<!-- No scripts -->'}
+{chr(10).join(scripts_list) if scripts_list else "<!-- No scripts -->"}
 </scripts>
 
 <instructions>

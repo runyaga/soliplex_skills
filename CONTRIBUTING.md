@@ -129,11 +129,7 @@ soliplex_skills/
 │   ├── config.py            # Pydantic config models
 │   ├── adapter.py           # Core adapter with caching
 │   ├── tools.py             # Soliplex-compatible tools
-│   ├── exceptions.py        # Exception hierarchy
-│   └── introspection/       # Cross-room tools
-│       ├── __init__.py
-│       ├── config.py
-│       └── tools.py
+│   └── exceptions.py        # Exception hierarchy
 ├── tests/
 │   ├── unit/                # Unit tests (mocked)
 │   └── functional/          # Integration tests (real skills)

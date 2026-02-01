@@ -153,9 +153,7 @@ class TestSoliplexSkillsAdapter:
         with pytest.raises(SkillResourceNotFoundError):
             await adapter.read_skill_resource(mock_skill.name, "nonexistent")
 
-    async def test_run_skill_script_success(
-        self, mock_skill_with_resources
-    ):
+    async def test_run_skill_script_success(self, mock_skill_with_resources):
         """Test run_skill_script executes script."""
         toolset = MagicMock()
         skill = mock_skill_with_resources
