@@ -1,0 +1,38 @@
+# Soliplex Installation Configuration for soliplex_skills
+#
+# This file registers the Skills tool configs with Soliplex.
+# Include this in your installation's meta.tool_configs list.
+#
+# Usage:
+#   1. Copy this file to your Soliplex installation directory
+#   2. Reference the tool configs in your installation.yaml:
+#
+#      meta:
+#        tool_configs:
+#          - soliplex_skills.config.ListSkillsConfig
+#          - soliplex_skills.config.LoadSkillConfig
+#          - soliplex_skills.config.ReadSkillResourceConfig
+#          - soliplex_skills.config.RunSkillScriptConfig
+
+meta:
+  # Tool configuration classes for Skills integration
+  tool_configs:
+    - soliplex_skills.config.ListSkillsConfig
+    - soliplex_skills.config.LoadSkillConfig
+    - soliplex_skills.config.ReadSkillResourceConfig
+    - soliplex_skills.config.RunSkillScriptConfig
+
+# Default skills configuration reference (illustrative only).
+# NOTE: Soliplex does not auto-merge this section into room configs.
+# Copy these values to each room_config.yaml tool entry as needed.
+defaults:
+  skills:
+    # Default skills directory relative to installation root
+    directories:
+      - ./skills
+    # Validate skill structure on load
+    validate: true
+    # Maximum depth for skill discovery
+    max_depth: 3
+    # Tools to exclude (e.g., disable script execution)
+    exclude_tools: []

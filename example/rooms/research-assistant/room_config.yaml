@@ -1,0 +1,33 @@
+id: research-assistant
+name: Research Assistant
+description: Academic research with citation support
+
+suggestions:
+  - "Find recent papers on large language models"
+  - "What are the key findings on climate change mitigation?"
+  - "Summarize the latest research on CRISPR gene editing"
+
+agent:
+  template_id: default_chat
+  system_prompt: ./prompt.txt
+
+tools:
+  # Basic tools
+  - tool_name: soliplex.tools.get_current_datetime
+
+  # Skills tools - discover and use research methodology
+  # Using YAML list format for directories (preferred)
+  - tool_name: soliplex_skills.tools.list_skills
+    directories:
+      - ../../skills
+
+  - tool_name: soliplex_skills.tools.load_skill
+    directories:
+      - ../../skills
+
+  - tool_name: soliplex_skills.tools.read_skill_resource
+    directories:
+      - ../../skills
+
+  # Note: run_skill_script excluded for this room
+  # (no executable scripts needed for research)
