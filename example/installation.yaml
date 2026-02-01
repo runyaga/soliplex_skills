@@ -33,9 +33,13 @@ thread_persistence_dburi:
   sync: "sqlite://"
   async: "sqlite+aiosqlite://"
 
-room_authz_dburi:
-  sync: "sqlite://"
-  async: "sqlite+aiosqlite://"
+# room_authz_dburi removed - not supported by current soliplex version
+# room_authz_dburi:
+#   sync: "sqlite://"
+#   async: "sqlite+aiosqlite://"
+
+# Disable OIDC (no oidc/config.yaml exists)
+oidc_paths: []
 
 room_paths:
   - "./rooms"
