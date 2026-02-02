@@ -23,7 +23,8 @@ def factorial(n: int) -> int:
 def fibonacci(n: int) -> int:
     """Compute nth Fibonacci number (0-indexed: fib(0)=0, fib(1)=1)."""
     if n < 0:
-        raise ValueError("n must be non-negative")
+        msg = "n must be non-negative"
+        raise ValueError(msg)
     if n <= 1:
         return n
     a, b = 0, 1
@@ -54,7 +55,7 @@ def divide(a: int, b: int) -> float:
 
 def power(a: int, b: int) -> int:
     """Exponentiation."""
-    return a ** b
+    return a**b
 
 
 def modexp(base: int, exp: int, mod: int) -> int:
@@ -96,25 +97,22 @@ def is_prime(n: int) -> bool:
         return True
     if n % 2 == 0:
         return False
-    for i in range(3, int(n**0.5) + 1, 2):
-        if n % i == 0:
-            return False
-    return True
+    return all(n % i != 0 for i in range(3, int(n**0.5) + 1, 2))
 
 
 def parse_args():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description="Precise mathematical calculations")
-    parser.add_argument("--operation", "-op", type=str, help="Operation to perform")
+    parser = argparse.ArgumentParser(description="Math calculations")
+    parser.add_argument("--operation", "-op", type=str, help="Operation")
     parser.add_argument("--n", type=int, help="First number argument")
-    parser.add_argument("--a", type=int, help="First number for two-arg operations")
-    parser.add_argument("--b", type=int, help="Second number for two-arg operations")
+    parser.add_argument("--a", type=int, help="First number (two-arg ops)")
+    parser.add_argument("--b", type=int, help="Second number (two-arg ops)")
     parser.add_argument("--base", type=int, help="Base for modexp")
     parser.add_argument("--exp", type=int, help="Exponent for modexp")
     parser.add_argument("--mod", type=int, help="Modulus for modexp")
 
     # Also support positional args for backward compatibility
-    parser.add_argument("positional", nargs="*", help="Positional args: operation [args...]")
+    parser.add_argument("positional", nargs="*", help="operation [args...]")
 
     return parser.parse_args()
 
@@ -130,7 +128,9 @@ def main():
     else:
         print("Usage: calculate.py --operation <op> [--n N] [--a A] [--b B]")
         print("   or: calculate.py <operation> <args...>")
-        print("Operations: add, subtract, multiply, divide, power, factorial, fibonacci, modexp, gcd, lcm, prime_factors, is_prime")
+        print("Operations: add, subtract, multiply, divide, power,")
+        print("  factorial, fibonacci, modexp, gcd, lcm,")
+        print("  prime_factors, is_prime")
         sys.exit(1)
 
     try:
@@ -185,7 +185,12 @@ def main():
             print(f"{a} * {b} = {result}")
 
         elif op == "modexp":
-            if args.base is not None and args.exp is not None and args.mod is not None:
+            has_all_args = (
+                args.base is not None
+                and args.exp is not None
+                and args.mod is not None
+            )
+            if has_all_args:
                 base, exp, mod = args.base, args.exp, args.mod
             else:
                 base = int(args.positional[1])

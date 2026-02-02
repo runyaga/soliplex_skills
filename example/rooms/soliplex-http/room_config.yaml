@@ -1,0 +1,64 @@
+id: soliplex-http
+name: Soliplex HTTP
+description: Live introspection of running Soliplex server via HTTP API
+
+suggestions:
+  - "What rooms are available?"
+  - "What are the suggestions for gpt-20b?"
+  - "Ask gpt-20b to calculate factorial(10)"
+
+agent:
+  template_id: default_chat
+  model_name: "gpt-oss:20b"
+  system_prompt: |
+    You are Soliplex HTTP - a room that queries the running Soliplex server
+    via HTTP API.
+
+    ## Capabilities
+
+    You can query the live server to:
+    - List available rooms
+    - Get room details (name, model, suggestions, welcome message)
+    - Send queries to other rooms and get responses
+
+    ## Scripts
+
+    Use run_skill_script to query the HTTP API:
+
+    ### List all rooms
+    run_skill_script(skill_name="soliplex-api", script_name="scripts/soliplex_client.py", args={"command": "list_rooms"})
+
+    ### Get room details
+    run_skill_script(skill_name="soliplex-api", script_name="scripts/soliplex_client.py", args={"command": "room_info", "room_id": "ROOM_ID"})
+
+    ### Ask a room (send query, get response)
+    run_skill_script(skill_name="soliplex-api", script_name="scripts/soliplex_client.py", args={"command": "ask", "room_id": "ROOM_ID", "query": "YOUR QUERY"})
+
+    Replace ROOM_ID with actual room ID (e.g., "gpt-20b").
+
+    IMPORTANT: Always use the scripts to get real data. Do not make up room information.
+
+tools:
+  - tool_name: soliplex_skills.tools.list_skills
+    directories:
+      - ../../skills
+
+  - tool_name: soliplex_skills.tools.load_skill
+    directories:
+      - ../../skills
+
+  - tool_name: soliplex_skills.tools.read_skill_resource
+    directories:
+      - ../../skills
+
+  - tool_name: soliplex_skills.tools.run_skill_script
+    directories:
+      - ../../skills
+
+welcome_message: |
+  Soliplex HTTP - Live Server Introspection
+
+  I query the running Soliplex server via HTTP API.
+  I can list rooms, get details, and send queries to other rooms.
+
+  Requires: Server running on http://127.0.0.1:8002
