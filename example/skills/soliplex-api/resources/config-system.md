@@ -67,6 +67,24 @@ print(room_config.tools)           # List[ToolConfig]
 
 Base class for tool configurations. Specialized by tool type.
 
+### Registration Rule
+
+**IMPORTANT:** A custom ToolConfig class must be registered in `meta.tool_configs` in `installation.yaml` BEFORE Soliplex can recognize it in any `room_config.yaml`.
+
+```yaml
+# installation.yaml
+id: my-installation
+
+meta:
+  tool_configs:
+    # Register your custom config classes here
+    - my_adapter.config.MyToolConfig
+    - my_adapter.config.QueryServiceConfig
+    - my_adapter.config.UpdateServiceConfig
+```
+
+Without registration, Soliplex will fail to parse the `tools:` section in room configs.
+
 ### ToolConfig Base
 
 ```python
@@ -74,6 +92,42 @@ class ToolConfig(BaseModel):
     type: str           # Tool type discriminator
     enabled: bool = True
 ```
+
+### Tool Requires Enum
+
+Soliplex tools can require different runtime contexts. The `tool_requires` property determines what Soliplex injects:
+
+```python
+from soliplex.config import ToolRequires
+
+class ToolRequires(enum.StrEnum):
+    TOOL_CONFIG = "tool_config"      # Tool receives ToolConfig instance
+    FASTAPI_CONTEXT = "fastapi_context"  # Tool receives FastAPI request context
+    BARE = "bare"                    # Tool receives no injection
+```
+
+**TOOL_CONFIG (most common for adapters):**
+```python
+async def my_tool(tool_config: MyToolConfig, query: str) -> str:
+    # tool_config is injected by Soliplex
+    return await do_work(tool_config.api_key)
+```
+
+**FASTAPI_CONTEXT (for tools needing request info):**
+```python
+async def my_tool(ctx: RunContext[AgentDeps], query: str) -> str:
+    # ctx provides access to FastAPI request, user info, etc.
+    return await do_work(ctx.deps.request)
+```
+
+**BARE (simple tools with no injection):**
+```python
+async def my_tool(query: str) -> str:
+    # No config or context injected
+    return query.upper()
+```
+
+**Note:** A tool can use `tool_config` OR `ctx`, but NOT both. Soliplex inspects the function signature to determine which mode to use.
 
 ### SkillsToolConfig
 
