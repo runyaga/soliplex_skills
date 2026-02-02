@@ -34,18 +34,28 @@ Use this skill when the user needs to:
 ## Quick Start
 
 **List rooms from a running server:**
-```bash
-python scripts/soliplex_client.py --command list_rooms
+```python
+run_skill_script("soliplex-api", "scripts/soliplex_client.py",
+                 args={"command": "list_rooms"})
 ```
 
 **Query a room:**
-```bash
-python scripts/soliplex_client.py --command ask --room_id gpt-20b --query "Calculate factorial(5)"
+```python
+run_skill_script("soliplex-api", "scripts/soliplex_client.py",
+                 args={"command": "ask", "room_id": "gpt-20b",
+                       "query": "Calculate factorial(5)"})
 ```
 
 **Offline config introspection:**
-```bash
-python scripts/soliplex_client.py --direct installation.yaml --command list_skills
+```python
+run_skill_script("soliplex-api", "scripts/soliplex_client.py",
+                 args={"direct": "installation.yaml", "command": "list_skills"})
+```
+
+**JSON output (for structured parsing):**
+```python
+run_skill_script("soliplex-api", "scripts/soliplex_client.py",
+                 args={"command": "list_rooms", "format": "json"})
 ```
 
 ## Reference Files
@@ -61,7 +71,7 @@ Read these files for detailed information:
 | `references/config-system.md` | YAML structures, ToolConfig, environment vars |
 | `references/adapter-patterns.md` | Tool patterns (Pattern A/B), agent caching |
 | `references/api-reference.md` | HTTP endpoints, request/response formats |
-| `REFERENCE.md` | Client usage, script reference, examples |
+| `references/client-usage.md` | Client usage, script reference, examples |
 
 ## Scripts
 

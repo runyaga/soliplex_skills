@@ -7,9 +7,9 @@ Meta-guide to soliplex-api skill references.
 ```
 soliplex-api/
 ├── SKILL.md            # Entry point (activation triggers, quick start)
-├── REFERENCE.md        # Client usage, script reference, examples
 ├── references/         # Detailed technical documentation
 │   ├── INDEX.md        # This file
+│   ├── client-usage.md # Client usage, CLI commands, examples
 │   ├── architecture.md # Core concepts, runtime flow
 │   ├── ag-ui.md        # AG-UI protocol, events, SSE
 │   ├── auth.md         # Authentication & authorization
@@ -25,7 +25,7 @@ soliplex-api/
 
 | Reference | Purpose | When to Read |
 |-----------|---------|--------------|
-| `../REFERENCE.md` | Client usage, CLI commands, code examples | Using the skill scripts |
+| `client-usage.md` | Client usage, CLI commands, code examples | Using the skill scripts |
 | `design-principles.md` | Core principles for building integrations | First, before any development |
 | `architecture.md` | Core concepts, runtime flow, directory structure | Understanding the system |
 | `ag-ui.md` | AG-UI protocol, events, state management, SSE parsing | Working with conversations |
