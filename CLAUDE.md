@@ -9,22 +9,11 @@ Adapter for pydantic-ai-skills to interact with Soliplex installations.
 - **Lint:** `uv run ruff check .`
 - **Run Server:** `uv run soliplex-cli serve example/installation.yaml --no-auth-mode`
 
-## Skill Architecture
+## Tooling & Skills
 
-This project contains the core adapter (`src/`) and example skills (`example/skills/`).
+Skill documentation and `run_skill_script` usage is in `AGENTS.md`.
 
-**Crucial:** When working with a specific skill, **read** `example/skills/<skill_name>/SKILL.md` first. These files contain:
-- Strict rules (e.g., Math Solver forbids LLM calculation)
-- Required scripts and arguments
-- Methodologies and workflows
-
-## Available Skills
-
-| Skill | Description |
-|-------|-------------|
-| `math-solver` | Precise Python-based calculation (factorials, fibonacci, etc.) |
-| `soliplex-api` | Soliplex server introspection and API interaction |
-| `research-assistant` | Academic research with citation support |
+**Instruction:** If a task requires tools or scripts, read `AGENTS.md` first to understand correct usage and arguments.
 
 ## Project Structure
 
