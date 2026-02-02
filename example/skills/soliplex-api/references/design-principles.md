@@ -67,7 +67,7 @@ def calculate_factorial(n: int) -> int:
 
 **Why:**
 - Skills are discoverable (`list_skills`)
-- Skills have documentation (SKILL.md, resources/)
+- Skills have documentation (SKILL.md, references/)
 - Skills are portable across rooms
 - Skills can be versioned independently
 
@@ -136,7 +136,7 @@ Put documentation in skill resources, not inline comments.
 skills/my-skill/
 ├── SKILL.md           # Overview, quick start
 ├── scripts/           # Executable code
-└── resources/
+└── references/
     ├── INDEX.md       # What's in each file
     ├── concepts.md    # Core concepts
     └── examples.md    # Usage examples

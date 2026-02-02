@@ -188,9 +188,9 @@ def main():
     parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()
 
-    resources_dir = Path(__file__).parent.parent / "resources"
+    resources_dir = Path(__file__).parent.parent / "references"
     if not resources_dir.exists():
-        print(f"Resources directory not found: {resources_dir}")
+        print(f"References directory not found: {resources_dir}")
         sys.exit(1)
 
     total_errors = 0

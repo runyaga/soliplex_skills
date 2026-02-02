@@ -1,197 +1,86 @@
 ---
 name: soliplex-api
-description: Soliplex API client and adapter development guide - interact with Soliplex and learn to build adapters
+description: Interact with Soliplex AI rooms via API client, and learn to build Soliplex adapters. Use when working with Soliplex servers, querying rooms, building tool integrations, or understanding Soliplex architecture (AG-UI protocol, authentication, MCP).
 ---
 
 # Soliplex API Skill
 
-This skill provides two capabilities:
+## When to Activate This Skill
 
-1. **API Client** - Query and delegate tasks to Soliplex rooms
-2. **Adapter Guide** - Documentation for building Soliplex integrations
+Use this skill when the user needs to:
 
-## When to Use This Skill
+**API Operations:**
+- List or query Soliplex rooms
+- Send questions to room agents
+- Discover room capabilities (tools, models)
+- Work with Soliplex server APIs
 
-**As a Tool:**
-- Discover available Soliplex rooms and their capabilities
-- Delegate specialized tasks to rooms (math, code review, research)
-- Get computed results from room agents
+**Development Tasks:**
+- Build a Soliplex adapter or integration
+- Understand ToolConfig, RoomConfig, or InstallationConfig
+- Configure tools in room_config.yaml or installation.yaml
+- Debug AG-UI streaming, SSE events, or authentication issues
 
-**As Documentation:**
-- Learn Soliplex architecture and concepts
-- Understand adapter patterns for wrapping external libraries
-- Reference when building new Soliplex integrations
+**Keywords:** soliplex, room, agent, tool, adapter, AG-UI, MCP, ToolConfig, installation.yaml, room_config.yaml
 
-## Resources
+## Capabilities
 
-### Start Here
-- `INDEX.md` - Meta-guide: what's in each resource, reading order
-- `design-principles.md` - Core principles for Soliplex development
-
-### API & Architecture
-- `api-reference.md` - HTTP endpoints and AG-UI protocol
-- `architecture.md` - Core concepts: rooms, tools, installations
-- `config-system.md` - ToolConfig, RoomConfig, InstallationConfig
-
-### Adapter Development
-- `adapter-patterns.md` - Patterns for building Soliplex adapters
-- `soliplex-skills-example.md` - Case study: how soliplex_skills was built
-
-### Validation
-Run `scripts/validate_resources.py` to check for context rot in docs.
-
-## Scripts
-
-### client.py
-
-Python module with dual client support:
-
-```python
-from client import create_client, HTTPClient, DirectClient
-
-# Auto-detect best client
-client = create_client()
-
-# Or explicitly choose
-client = HTTPClient("http://127.0.0.1:8002")
-client = DirectClient("/path/to/installation.yaml")
-```
-
-**Client Interface:**
-| Method | HTTPClient | DirectClient | Description |
-|--------|------------|--------------|-------------|
-| `list_rooms()` | ✅ | ✅ | Get all available rooms |
-| `get_room(id)` | ✅ | ✅ | Get room details |
-| `ask(id, query)` | ✅ | ❌ | Send query, get response |
-| `get_installation_info()` | ❌ | ✅ | Installation overview |
-| `list_skills()` | ❌ | ✅ | Get all skills |
-| `get_skill(name)` | ❌ | ✅ | Get skill details |
-| `get_room_tools(id)` | ❌ | ✅ | Get room's tool configs |
-| `get_agent_configs()` | ❌ | ✅ | Get agent configurations |
-
-DirectClient methods require compatible soliplex package version.
-
-### soliplex_client.py
-
-CLI wrapper for quick access.
-
-**Via skill tools (kwargs format):**
-```python
-run_skill_script("soliplex-api", "scripts/soliplex_client.py",
-                 args={"command": "list_rooms"})
-
-run_skill_script("soliplex-api", "scripts/soliplex_client.py",
-                 args={"command": "room_info", "room_id": "gpt-20b"})
-
-run_skill_script("soliplex-api", "scripts/soliplex_client.py",
-                 args={"command": "ask", "room_id": "gpt-20b",
-                       "query": "Calculate factorial(5)"})
-```
-
-**Direct CLI usage:**
-```bash
-# HTTPClient commands (uses SOLIPLEX_URL or default localhost)
-python soliplex_client.py --command list_rooms
-python soliplex_client.py --command room_info --room_id gpt-20b
-python soliplex_client.py --command ask --room_id gpt-20b --query "Hello"
-
-# DirectClient commands (requires --direct flag)
-python soliplex_client.py --direct installation.yaml --command installation_info
-python soliplex_client.py --direct installation.yaml --command list_skills
-python soliplex_client.py --direct installation.yaml --command skill_info --skill_name math-solver
-python soliplex_client.py --direct installation.yaml --command room_tools --room_id gpt-20b
-python soliplex_client.py --direct installation.yaml --command agent_configs
-```
-
-## Configuration
-
-```bash
-# Server URL for HTTPClient
-export SOLIPLEX_URL=http://127.0.0.1:8002
-
-# Installation path for DirectClient
-export SOLIPLEX_INSTALLATION=/path/to/installation.yaml
-```
+| Capability | Description |
+|------------|-------------|
+| **HTTPClient** | Query running Soliplex servers (list rooms, send queries) |
+| **DirectClient** | Offline config introspection (skills, tools, agents) |
+| **Documentation** | Architecture, config system, adapter patterns |
 
 ## Quick Start
 
-### 1. Discovery (HTTPClient - recommended)
-
-```python
-from client import HTTPClient
-
-client = HTTPClient("http://127.0.0.1:8002")
-rooms = client.list_rooms()
-for room_id, info in rooms.items():
-    print(f"{room_id}: {info.name}")
-    if info.description:
-        print(f"  {info.description}")
+**List rooms from a running server:**
+```bash
+python scripts/soliplex_client.py --command list_rooms
 ```
 
-### 2. Execution (requires running server)
-
-```python
-from client import HTTPClient
-
-client = HTTPClient("http://127.0.0.1:8002")
-result = client.ask("gpt-20b", "What is factorial(23)?")
-print(result)  # 25852016738884976640000
+**Query a room:**
+```bash
+python scripts/soliplex_client.py --command ask --room_id gpt-20b --query "Calculate factorial(5)"
 ```
 
-### 3. Offline Introspection (DirectClient)
-
-```python
-from client import DirectClient
-
-client = DirectClient("/path/to/installation.yaml")
-
-# Installation overview
-info = client.get_installation_info()
-print(f"Rooms: {info.room_count}, Skills: {info.skill_count}")
-
-# List all skills
-for name, skill in client.list_skills().items():
-    print(f"{name}: {skill.description}")
-
-# Get room tools
-for tool in client.get_room_tools("gpt-20b"):
-    print(f"{tool.name}: {tool.tool_name}")
+**Offline config introspection:**
+```bash
+python scripts/soliplex_client.py --direct installation.yaml --command list_skills
 ```
 
-## Notes
+## Reference Files
 
-### DirectClient Compatibility
+Read these files for detailed information:
 
-DirectClient uses `soliplex.config.load_installation()` to parse config files
-directly. This requires:
+| File | Purpose |
+|------|---------|
+| `references/INDEX.md` | Meta-guide: what's in each file, reading order |
+| `references/architecture.md` | Core concepts, runtime flow, directory structure |
+| `references/ag-ui.md` | AG-UI protocol, 25+ event types, SSE parsing |
+| `references/auth.md` | Authentication, authorization, security warnings |
+| `references/config-system.md` | YAML structures, ToolConfig, environment vars |
+| `references/adapter-patterns.md` | Tool patterns (Pattern A/B), agent caching |
+| `references/api-reference.md` | HTTP endpoints, request/response formats |
+| `REFERENCE.md` | Client usage, script reference, examples |
 
-1. The `soliplex` package installed (`pip install soliplex`)
-2. Compatible soliplex version that supports your installation.yaml schema
+## Scripts
 
-If DirectClient fails to load configs, use HTTPClient instead (recommended).
-HTTPClient works with any running Soliplex server regardless of version.
+| Script | Purpose |
+|--------|---------|
+| `scripts/soliplex_client.py` | CLI for HTTPClient and DirectClient |
+| `scripts/client.py` | Python client library |
+| `scripts/validate_resources.py` | Check documentation for context rot |
 
-### HTTPClient vs DirectClient
+## Environment
 
-| Feature | HTTPClient | DirectClient |
-|---------|------------|--------------|
-| Requires running server | Yes | No |
-| Room discovery | ✅ | ✅ |
-| Send queries | ✅ | ❌ |
-| Skill introspection | ❌ | ✅ |
-| Tool config details | ❌ | ✅ |
-| Agent config details | ❌ | ✅ |
-| Version sensitivity | Low | High |
-
-**Use HTTPClient** for runtime operations (queries, responses).
-**Use DirectClient** for offline config introspection and development.
+```bash
+SOLIPLEX_URL=http://127.0.0.1:8000      # HTTPClient server
+SOLIPLEX_INSTALLATION=/path/to/install   # DirectClient config
+```
 
 ## Learning Path
 
-To understand Soliplex and build adapters:
-
-1. Read `architecture.md` - Understand core concepts
-2. Read `config-system.md` - Learn the configuration patterns
-3. Read `adapter-patterns.md` - Study adapter design
-4. Read `soliplex-skills-example.md` - See a real implementation
-5. Use the client scripts to experiment
+1. `references/architecture.md` - Core concepts
+2. `references/config-system.md` - Configuration
+3. `references/adapter-patterns.md` - Building adapters
+4. `references/api-reference.md` - API integration

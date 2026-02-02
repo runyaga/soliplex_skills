@@ -59,21 +59,47 @@ async def todo_search(tool_config: TodoConfig, query: str): ...
 async def weather_query(tool_config: WeatherConfig, text: str): ...
 ```
 
-### Tool Functions Must Accept tool_config
+### Tool Function Signature Patterns
 
-Soliplex injects config via the `tool_config` parameter:
+Soliplex supports two distinct patterns for tool configuration access:
+
+**Pattern A: Frozen Configuration (Standard Adapter Pattern)**
 
 ```python
-# Your tool function MUST have this signature
 async def my_tool(
-    tool_config: MyToolConfig,  # Injected by Soliplex
-    param1: str,                # User-provided parameters
-    param2: int = 10,
+    tool_config: MyToolConfig,  # Injected via functools.partial at startup
+    query: str,
 ) -> str:
     """Tool description shown to LLM."""
-    # Use tool_config to access your configuration
-    return f"Result using {tool_config.some_setting}"
+    return f"Connecting to {tool_config.endpoint}..."
 ```
+
+- **Pros**: Simple signature, easy to test
+- **Cons**: Config frozen at Agent creation time (see Agent Caching below)
+- **Best for**: Static configurations that don't change per-request
+
+**Pattern B: Runtime Context (Dynamic)**
+
+```python
+from pydantic_ai import RunContext
+from soliplex.agents import AgentDependencies
+
+async def my_tool(
+    ctx: RunContext[AgentDependencies],
+    query: str,
+) -> str:
+    """Tool description shown to LLM."""
+    # Access config dynamically from run dependencies
+    tool_config = ctx.deps.tool_configs["my_adapter.tools.my_tool"]
+    user = ctx.deps.user
+    return f"User {user.email} connecting to {tool_config.endpoint}..."
+```
+
+- **Pros**: Bypasses Agent Caching, access to per-request state (User, Installation)
+- **Cons**: More complex signature, tool_name must match exactly
+- **Best for**: User-specific configs, dynamic settings
+
+⚠️ **Note**: Pattern B tools using `FASTAPI_CONTEXT` are **excluded from MCP Server exposure**.
 
 ## The Adapter Pattern
 
@@ -304,19 +330,26 @@ tools:
     max_connections: 10
 ```
 
-### 2. Resource Caching - Critical for Connections
+### 2. Agent Caching and Config Lifecycle
 
-**CRITICAL: Soliplex creates a NEW ToolConfig instance for every tool call.**
+⚠️ **CRITICAL WARNING**: Soliplex caches Agents by Room ID in `_agent_cache`.
 
-If you create a database connection inside your tool function without caching, you'll open thousands of connections and crash your infrastructure.
+**How it works:**
+1. **Agent Creation**: First request to a room creates Agent via `get_agent_from_configs`
+2. **Tool Freezing**: Pattern A tools have `tool_config` baked via `functools.partial`
+3. **Caching**: Agent stored in cache, subsequent requests reuse it
 
-**Wrong approach (opens new connection every call):**
-```python
-async def my_tool(tool_config: MyConfig, query: str) -> str:
-    client = DatabaseClient(tool_config.dsn)  # BAD: New connection every call!
-    await client.connect()
-    return await client.query(query)
-```
+**Implications:**
+- **Pattern A**: Config updates won't apply until cache cleared/server restarted
+- **Pattern B**: `ctx.deps.tool_configs` passed fresh every `agent.run()` - always sees latest
+
+**When to use each pattern:**
+- Pattern A: Static configs (API endpoints, credentials that don't change)
+- Pattern B: Dynamic configs (user-specific API keys, per-request settings)
+
+### 3. Resource Caching - Critical for Connections
+
+Even though Agents are cached, you should still cache expensive resources:
 
 **Correct approach (cache by connection parameters with thread safety):**
 ```python
@@ -327,16 +360,11 @@ _resource_cache: dict[tuple, Any] = {}
 _init_lock = asyncio.Lock()
 
 async def _get_client(config: MyToolConfig) -> DatabaseClient:
-    """Get or create cached client for this config.
-
-    IMPORTANT: Cache key must include ALL connection parameters,
-    not id(config) which changes every call!
-    """
+    """Get or create cached client for this config."""
     # Build cache key from actual connection values
     cache_key = (
         config.dsn,
         config.database,
-        config.session_id,  # If using sessions
     )
 
     async with _init_lock:  # Thread-safe initialization
@@ -352,9 +380,9 @@ async def my_tool(tool_config: MyConfig, query: str) -> str:
     return await client.query(query)
 ```
 
-**Why `id(config)` fails:** Soliplex creates separate config instances for each tool, so `id(AddTodoConfig)` != `id(ReadTodosConfig)` even with identical connection settings.
+**Why cache by values, not `id(config)`**: Multiple ToolConfig classes (e.g., `AddTodoConfig`, `ReadTodosConfig`) may share the same connection settings. Caching by values ensures connection reuse across tools.
 
-### 3. Lazy Loading
+### 5. Lazy Loading
 
 Don't import external libraries until needed:
 
@@ -365,22 +393,33 @@ async def my_tool(tool_config: MyConfig, query: str) -> str:
     ...
 ```
 
-### 4. Error Handling - Return Strings, Don't Raise
+### 4. Error Handling - Wiring vs Runtime
 
-Tool functions should return error strings for LLM-friendly handling:
+Distinguish between wiring errors (missing config) and runtime errors (transient failures):
 
 ```python
 async def my_tool(tool_config: MyConfig, query: str) -> dict | str:
+    # 1. Wiring Check (RAISE for missing config - this is a setup error)
+    if tool_config is None:
+        raise ValueError("Tool configuration missing - check room config")
+
     try:
-        result = do_something()
+        result = await client.search(query)
         return {"success": True, "data": result}
+    except TimeoutError:
+        # 2. Runtime Error (RETURN string for LLM recovery)
+        return "Error: The search service timed out. Please try again later."
     except NotFoundException:
         return "Error: Item not found."  # LLM can understand this
     except Exception as e:
-        return f"Error: {e}"
+        return f"Error: Unexpected failure: {e}"
 ```
 
-### 5. Validation at Config Time
+**Key distinction:**
+- **Wiring errors** (missing config, bad setup): RAISE - crashes the run, operator must fix
+- **Runtime errors** (timeouts, not found): RETURN string - LLM can recover or inform user
+
+### 6. Validation at Config Time
 
 Validate in `__post_init__`:
 
@@ -395,7 +434,7 @@ class MyConfig(ToolConfig):
             raise ValueError("postgres_dsn required when storage='postgres'")
 ```
 
-### 6. Use TYPE_CHECKING for Circular Imports
+### 7. Use TYPE_CHECKING for Circular Imports
 
 ```python
 from typing import TYPE_CHECKING
@@ -423,7 +462,7 @@ def tool_with_config(self):
     return tool_w_config
 ```
 
-### 7. Understand create_toolset() vs Soliplex Loading
+### 8. Understand create_toolset() vs Soliplex Loading
 
 The `create_toolset()` method in your config class is **NOT called by Soliplex**. Soliplex loads tools individually via the `tool_name` path and `tool_with_config()`.
 
@@ -498,20 +537,35 @@ def test_tool_name_has_dot():
 | Mistake | Problem | Solution |
 |---------|---------|----------|
 | `tool_name = "my-tool"` | No dot, crashes `rsplit` | Use `my_adapter.tools.my_tool` |
-| Raising exceptions | LLM can't handle | Return error strings |
+| Raising runtime exceptions | LLM can't recover | Return error strings for runtime errors |
 | Module-level imports | Slows config loading | Lazy import in functions |
 | Missing `from_yaml` | YAML config fails | Implement classmethod |
 | Hardcoded `tool_name` in `from_yaml` | Subclasses broken | Use `cls.tool_name` |
+| Dynamic configs with Pattern A | Configs frozen at startup | Use Pattern B for per-request configs |
+| Missing `meta.tool_configs` | TypeError on YAML parse | Register all ToolConfig classes |
+
+## MCP Server Compatibility
+
+If exposing rooms via MCP:
+
+| Tool Type | MCP Compatible | Notes |
+|-----------|----------------|-------|
+| Pattern A (tool_config) | ⚠️ Partial | Must have wrapper in `MCP_TOOL_CONFIG_WRAPPERS_BY_TOOL_NAME` |
+| Pattern B (ctx) | ❌ No | `FASTAPI_CONTEXT` tools auto-excluded |
+| BARE (no injection) | ✅ Yes | Works directly |
 
 ## Packaging Checklist
 
 - [ ] `tool_name` is a valid dotted import path
-- [ ] Tool functions accept `tool_config` as first parameter
-- [ ] Tool functions return error strings (not raise)
+- [ ] Tool functions use appropriate pattern (A for static, B for dynamic)
+- [ ] Tool functions return error strings for runtime errors
+- [ ] Tool functions raise for wiring errors (missing config)
 - [ ] `from_yaml()` implemented correctly
 - [ ] Per-tool config classes for each tool function
+- [ ] Config classes registered in `meta.tool_configs`
 - [ ] Lazy imports for external libraries
 - [ ] Unit tests with mocks
 - [ ] Integration tests with real library
 - [ ] Example installation.yaml showing registration
 - [ ] Example room_config.yaml showing usage
+- [ ] Consider MCP compatibility if needed

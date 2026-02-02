@@ -198,14 +198,26 @@ __all__ = [
 After building the adapter, users configure it in room_config.yaml:
 
 ```yaml
+# First, register in installation.yaml
+meta:
+  tool_configs:
+    - soliplex_skills.config.ListSkillsConfig
+    - soliplex_skills.config.LoadSkillConfig
+    - soliplex_skills.config.RunSkillScriptConfig
+
+# Then use in room_config.yaml
 tools:
-  - type: skills
+  - tool_name: soliplex_skills.tools.list_skills
     directories:
       - ../../skills
     exclude_tools:
       - dangerous-tool
     validate_skills: true
     max_depth: 3
+
+  - tool_name: soliplex_skills.tools.run_skill_script
+    directories:
+      - ../../skills
 ```
 
 ## Environment Variables
