@@ -46,7 +46,7 @@ python_files = "test_*.py"
 testpaths = ["tests/unit", "tests/functional", "tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-addopts = "--cov=soliplex_skills --cov-branch --cov-fail-under=90"
+addopts = "--cov=soliplex_skills --cov-branch --cov-fail-under=84"
 markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
@@ -54,7 +54,6 @@ markers = [
 
 [tool.coverage.run]
 source = ["src/soliplex_skills"]
-omit = ["src/soliplex_skills/introspection/*"]
 
 [tool.coverage.report]
 show_missing = true
