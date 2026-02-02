@@ -1,73 +1,30 @@
 # Soliplex Skills Project
 
-This project provides a Soliplex adapter for pydantic-ai-skills.
+Adapter for pydantic-ai-skills to interact with Soliplex installations.
 
-## Soliplex API Skill
+## Development Commands
 
-Use the `soliplex-api` skill in `example/skills/soliplex-api/` to interact with Soliplex installations.
+- **Install:** `uv sync`
+- **Test:** `uv run pytest`
+- **Lint:** `uv run ruff check .`
+- **Run Server:** `uv run soliplex-cli serve example/installation.yaml --no-auth-mode`
 
-### Quick Reference
+## Skill Architecture
 
-**List rooms (HTTPClient - requires running server):**
-```bash
-cd example && uv run python skills/soliplex-api/scripts/soliplex_client.py --command list_rooms
-```
+This project contains the core adapter (`src/`) and example skills (`example/skills/`).
 
-**Get room details:**
-```bash
-cd example && uv run python skills/soliplex-api/scripts/soliplex_client.py --command room_info --room_id gpt-20b
-```
+**Crucial:** When working with a specific skill, **read** `example/skills/<skill_name>/SKILL.md` first. These files contain:
+- Strict rules (e.g., Math Solver forbids LLM calculation)
+- Required scripts and arguments
+- Methodologies and workflows
 
-**Send query to room:**
-```bash
-cd example && uv run python skills/soliplex-api/scripts/soliplex_client.py --command ask --room_id gpt-20b --query "Calculate factorial(10)"
-```
+## Available Skills
 
-### DirectClient (Offline Introspection)
-
-For offline config analysis without a running server:
-
-```bash
-cd example && uv run python skills/soliplex-api/scripts/soliplex_client.py \
-  --direct installation.yaml --command installation_info
-
-cd example && uv run python skills/soliplex-api/scripts/soliplex_client.py \
-  --direct installation.yaml --command list_skills
-
-cd example && uv run python skills/soliplex-api/scripts/soliplex_client.py \
-  --direct installation.yaml --command room_tools --room_id gpt-20b
-```
-
-### Available Commands
-
-| Command | Requires Server | Description |
-|---------|-----------------|-------------|
-| `list_rooms` | HTTPClient or DirectClient | List all rooms |
-| `room_info` | HTTPClient or DirectClient | Room details (+ `--room_id`) |
-| `ask` | HTTPClient only | Send query (+ `--room_id`, `--query`) |
-| `installation_info` | DirectClient only | Installation overview |
-| `list_skills` | DirectClient only | All available skills |
-| `skill_info` | DirectClient only | Skill details (+ `--skill_name`) |
-| `room_tools` | DirectClient only | Room tool configs (+ `--room_id`) |
-| `agent_configs` | DirectClient only | Agent configurations |
-
-### Starting the Server
-
-```bash
-cd example && OLLAMA_BASE_URL=http://bizon:11434 uv run python run_server.py
-```
-
-Or if a CLI is available:
-```bash
-cd example && OLLAMA_BASE_URL=http://bizon:11434 uv run soliplex --no-auth-mode
-```
-
-### Documentation
-
-For Soliplex architecture and adapter development, read:
-- `example/skills/soliplex-api/resources/architecture.md`
-- `example/skills/soliplex-api/resources/config-system.md`
-- `example/skills/soliplex-api/resources/adapter-patterns.md`
+| Skill | Description |
+|-------|-------------|
+| `math-solver` | Precise Python-based calculation (factorials, fibonacci, etc.) |
+| `soliplex-api` | Soliplex server introspection and API interaction |
+| `research-assistant` | Academic research with citation support |
 
 ## Project Structure
 
@@ -75,9 +32,8 @@ For Soliplex architecture and adapter development, read:
 soliplex_skills/
 ├── src/soliplex_skills/     # Main adapter package
 ├── example/
-│   ├── installation.yaml    # Example Soliplex installation
+│   ├── installation.yaml    # Soliplex installation config
 │   ├── rooms/               # Room configurations
-│   ├── skills/              # Skills including soliplex-api
-│   └── run_server.py        # Server startup script
+│   └── skills/              # Skill definitions (read SKILL.md in each)
 └── tests/                   # Unit and integration tests
 ```
