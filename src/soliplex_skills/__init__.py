@@ -18,15 +18,6 @@ from soliplex_skills.exceptions import SkillsAdapterError
 from soliplex_skills.exceptions import SkillsConfigurationError
 from soliplex_skills.exceptions import SoliplexSkillsError
 
-# Introspection tools
-from soliplex_skills.introspection import DelegateToRoomConfig
-from soliplex_skills.introspection import DelegationError
-from soliplex_skills.introspection import DelegationResult
-from soliplex_skills.introspection import DiscoverRoomsConfig
-from soliplex_skills.introspection import IntrospectionToolConfig
-from soliplex_skills.introspection import delegate_to_room
-from soliplex_skills.introspection import discover_rooms
-
 # Tools (for direct import in room configs)
 from soliplex_skills.tools import list_skills
 from soliplex_skills.tools import load_skill
@@ -34,11 +25,6 @@ from soliplex_skills.tools import read_skill_resource
 from soliplex_skills.tools import run_skill_script
 
 __all__ = [
-    "DelegateToRoomConfig",
-    "DelegationError",
-    "DelegationResult",
-    "DiscoverRoomsConfig",
-    "IntrospectionToolConfig",
     "ListSkillsConfig",
     "LoadSkillConfig",
     "ReadSkillResourceConfig",
@@ -48,8 +34,6 @@ __all__ = [
     "SkillsToolConfig",
     "SkillsToolSettings",
     "SoliplexSkillsError",
-    "delegate_to_room",
-    "discover_rooms",
     "list_skills",
     "load_skill",
     "read_skill_resource",
